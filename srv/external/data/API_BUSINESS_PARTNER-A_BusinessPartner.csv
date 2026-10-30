@@ -1,0 +1,5 @@
+BusinessPartner;BusinessPartnerFullName;BusinessPartnerCategory;BusinessPartnerGrouping;BusinessPartnerIsBlocked;CreationDate
+1000001;Acme Manufacturing GmbH;2;BPEE;false;2024-03-11
+1000002;Nordic Retail AB;2;BPEE;false;2024-05-02
+1000003;Baltic Trading UAB;2;BPEE;false;2025-01-20
+1000004;Vistula Logistics Sp. z o.o.;2;BPEE;true;2025-06-30

@@ -1,0 +1,5 @@
+code;name;descr;criticality
+NEW;New;Order is being prepared and can be edited;0
+SUBMITTED;Submitted;Order submitted, stock reserved;2
+SHIPPED;Shipped;Order shipped to the customer;3
+CANCELLED;Cancelled;Order cancelled, stock released;1

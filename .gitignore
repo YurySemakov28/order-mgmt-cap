@@ -18,3 +18,9 @@ mta_archives/
 # @cap-js/cds-typer
 @cds-models
 cds.log
+
+# UI5 build output
+dist/
+
+# local secrets
+.env

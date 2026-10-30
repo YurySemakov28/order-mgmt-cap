@@ -1,0 +1,31 @@
+{
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.OrderViewer",
+      "description": "Read orders, customers and products"
+    },
+    {
+      "name": "$XSAPPNAME.OrderManager",
+      "description": "Maintain orders and customers, run order actions"
+    }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "OrderViewer",
+      "description": "Order viewer (read-only)",
+      "scope-references": [
+        "$XSAPPNAME.OrderViewer"
+      ],
+      "attribute-references": []
+    },
+    {
+      "name": "OrderManager",
+      "description": "Order manager",
+      "scope-references": [
+        "$XSAPPNAME.OrderManager"
+      ],
+      "attribute-references": []
+    }
+  ]
+}

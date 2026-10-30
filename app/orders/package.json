@@ -1,0 +1,15 @@
+{
+  "name": "orders",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Manage Orders — Fiori Elements V4 app (List Report / Object Page)",
+  "scripts": {
+    "build:cf": "ui5 build --config ui5-deploy.yaml --clean-dest --include-task=generateCachebusterInfo",
+    "start": "ui5 serve --config ui5.yaml --open index.html"
+  },
+  "devDependencies": {
+    "@ui5/cli": "^4",
+    "ui5-task-zipper": "^3",
+    "ui5-middleware-simpleproxy": "^3"
+  }
+}

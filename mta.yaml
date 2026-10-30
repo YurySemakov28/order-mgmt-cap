@@ -1,0 +1,143 @@
+_schema-version: 3.3.0
+ID: order-mgmt-cap
+version: 1.0.0
+description: "Order management on SAP BTP: CAP Node.js, Fiori Elements, XSUAA, HANA Cloud, S/4HANA via Destination service"
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+modules:
+  - name: order-mgmt-cap-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1
+      memory: 256M
+      disk-quota: 1024M
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: order-mgmt-cap-auth
+      - name: order-mgmt-cap-db
+      - name: order-mgmt-cap-destination
+
+  - name: order-mgmt-cap-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 256M
+    requires:
+      - name: order-mgmt-cap-db
+  - name: order-mgmt-cap
+    type: approuter.nodejs
+    path: .deploy/app-router
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: order-mgmt-cap-auth
+      - name: order-mgmt-cap-destination
+      - name: order-mgmt-cap-html5-runtime
+    provides:
+      - name: app-api
+        properties:
+          app-protocol: ${protocol}
+          app-uri: ${default-uri}
+
+  - name: order-mgmt-cap-app-deployer
+    type: com.sap.application.content
+    path: gen
+    build-parameters:
+      build-result: app/
+      requires:
+        - name: ordermgmtcaporders
+          artifacts:
+            - orders.zip
+          target-path: app/
+    requires:
+      - name: order-mgmt-cap-auth
+      - name: srv-api
+      - name: order-mgmt-cap-html5-repo-host
+        parameters:
+          content-target: true
+          config:
+            HTML5Runtime_enabled: true
+
+  - name: ordermgmtcaporders
+    type: html5
+    path: app/orders
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build:cf
+      supported-platforms:
+        []
+
+resources:
+  - name: order-mgmt-cap-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: order-mgmt-cap-${org}-${space}
+        tenant-mode: dedicated
+        oauth2-configuration:
+          credential-types:
+            - "binding-secret"
+            - "x509"
+          redirect-uris:
+            - https://*~{app-api/app-uri}/**
+        role-collections:
+          - name: 'OrderViewer (order-mgmt-cap ${org}-${space})'
+            description: 'Read orders'
+            role-template-references:
+              - '$XSAPPNAME.OrderViewer'
+          - name: 'OrderManager (order-mgmt-cap ${org}-${space})'
+            description: 'Create, edit, submit, ship and cancel orders'
+            role-template-references:
+              - '$XSAPPNAME.OrderManager'
+    requires:
+      - name: app-api
+  - name: order-mgmt-cap-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+  - name: order-mgmt-cap-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+
+  - name: order-mgmt-cap-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+  - name: order-mgmt-cap-html5-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime

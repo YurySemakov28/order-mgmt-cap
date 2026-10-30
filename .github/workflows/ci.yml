@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - name: Production build (HANA artifacts, XSUAA config)
+        run: npx cds build --production
+
+  mta-build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install -g mbt
+      - name: Build MTA archive
+        run: mbt build -t ./mta_archives
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mtar
+          path: mta_archives/*.mtar
+          retention-days: 7
