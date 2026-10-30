@@ -13,6 +13,40 @@ through the BTP Destination service**.
 |---|---|
 | ![List Report](docs/images/list-report.png) | ![Object Page](docs/images/object-page-submitted.png) |
 
+## Deployed on SAP BTP
+
+The application is deployed to a SAP BTP trial subaccount (Cloud Foundry, region `us10`)
+with `mbt build` + `cf deploy`: App Router, HTML5 Application Repository, XSUAA,
+HANA Cloud (HDI container) and the Destination service.
+
+| Fiori app served by the App Router | Order lifecycle NEW → SUBMITTED → SHIPPED |
+|---|---|
+| ![Deployed list report](docs/images/btp-list-report.png) | ![Deployed object page](docs/images/btp-object-page-shipped.png) |
+
+Live call to S/4HANA through destination `S4_BUPA`
+(`GET /odata/v4/order/BusinessPartners`, response shortened):
+
+```json
+{
+  "@odata.context": "$metadata#BusinessPartners",
+  "value": [
+    { "ID": "1018",     "category": "2", "name": "Bechtle AG Kriek street", "blocked": false },
+    { "ID": "10100011", "category": "2", "name": "SAP SE",                  "blocked": false }
+  ]
+}
+```
+
+Deployed landscape (`cf apps` / `cf services`):
+
+| CF app / service | Plan | Role |
+|---|---|---|
+| `order-mgmt-cap` | approuter | entry point, XSUAA login, serves UI |
+| `order-mgmt-cap-srv` | nodejs | CAP OData V4 service |
+| `order-mgmt-cap-db` | `hana` / `hdi-shared` | HDI container in HANA Cloud |
+| `order-mgmt-cap-auth` | `xsuaa` / `application` | scopes, role collections |
+| `order-mgmt-cap-destination` | `destination` / `lite` | `srv-api`, `S4_BUPA` |
+| `order-mgmt-cap-html5-repo-host` / `-runtime` | `html5-apps-repo` | UI storage / runtime |
+
 ## What it demonstrates
 
 | Area | Implementation |
